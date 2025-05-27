@@ -1,8 +1,8 @@
 package main
 
-import fmt
+import "fmt"
 
 func main() {
 	name := "MedCTI"
-	fmt.Printlln("Project for", name)
+	fmt.Println("Project for", name)
 }
