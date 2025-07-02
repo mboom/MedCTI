@@ -4,7 +4,7 @@ Demo Plain Text
 Installation
 ------------
 
-```
+```bash
 # Install Go
 setupfile="go1.24.3.linux-amd64.tar.gz"
 wget "https://go.dev/dl/$setupfile"
