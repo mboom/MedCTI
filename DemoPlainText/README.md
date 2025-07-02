@@ -5,6 +5,7 @@ Installation
 ------------
 
 ```
+# Install Go
 setupfile="go1.24.3.linux-amd64.tar.gz"
 wget "https://go.dev/dl/$setupfile"
 
@@ -16,6 +17,7 @@ sudo ln -s /usr/local/lib/go/bin/gofmt /usr/local/bin/gofmt
 
 rm $setupfile
 
+# Clone repository
 git clone git@github.com:mboom/MedCTI.git
 ```
 

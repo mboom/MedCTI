@@ -1,0 +1,11 @@
+import "google/protobuf/empty.proto";
+
+service Blockchain {
+    rpc PublishLogData(Flow) returns (google.protobuf.Empty) {}
+    rpc FetchLogData(google.protobuf.Empty) returns (stream Flow) {}
+}
+
+message Flow {
+    bytes destination = 1;
+    bytes source = 2;
+}
