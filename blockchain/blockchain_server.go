@@ -48,19 +48,29 @@ func (bs *blockchainServer) FetchLogData(_ *empty.Empty, stream Blockchain_Fetch
 	}
 	defer f.Close()
 
-	sizebuffer := make([]byte, 4)
-	_, err = f.Read(sizebuffer)
-	if err != nil {
-		panic(err)
-	}
-	size := binary.BigEndian.Uint32(sizebuffer)
-	data := make([]byte, size)
-	_, err = f.Read(data)
-	if err != nil {
-		panic(err)
-	}
+	for err == nil {
+		sizebuffer := make([]byte, 4)
+		_, err = f.Read(sizebuffer)
+		if err != nil {
+			panic(err)
+		}
+		size := binary.BigEndian.Uint32(sizebuffer)
 
-	flow := &pb.Flow{}
-	err = proto.Unmarshal(data, flow)
+		data := make([]byte, size)
+		_, err = f.Read(data)
+		if err != nil {
+			panic(err)
+		}
+
+		flow := &pb.Flow{}
+		err = proto.Unmarshal(data, flow)
+		if err != nil {
+			panic(err)
+		}
+
+		if err := stream.Send(flow); err != nil {
+			panic(err)
+		}
+	}
 	return nil
 }
