@@ -16,6 +16,7 @@ sudo ln -s /usr/local/lib/go/bin/gofmt /usr/local/bin/gofmt
 rm $setupfile
 
 # Install Protocol Buffers compiler and gRPC compiler
+sudo apt-get install protobuf-compiler
 go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 ```
@@ -26,4 +27,4 @@ Add GOPATH to your PATH variable to make the protocol compiler ```protoc``` loca
 
 Compile the Blockchain service:
 
-    protoc --go_out=. --go_opt=paths=source_relative --go-groc_out=. --go-grpc_opt=paths=source_relative blockchain.proto
+    protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative blockchain.proto

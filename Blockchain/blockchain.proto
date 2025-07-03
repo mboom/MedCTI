@@ -5,7 +5,7 @@ package blockchain;
 
 import "google/protobuf/empty.proto";
 
-option go_package = "github.com/mboom/MedCTI/Blockchain"
+option go_package = "github.com/mboom/MedCTI/Blockchain";
 
 // The Blockchain service definition
 service Blockchain {
