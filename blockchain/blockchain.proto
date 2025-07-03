@@ -5,7 +5,7 @@ package blockchain;
 
 import "google/protobuf/empty.proto";
 
-option go_package = "github.com/mboom/MedCTI/Blockchain";
+option go_package = "github.com/mboom/MedCTI/blockchain";
 
 // The Blockchain service definition
 service Blockchain {
@@ -21,6 +21,8 @@ service Blockchain {
 // Destination and source are 4-bit addresses for simplicity
 // Destination and source represent different kind of network addresses like MAC or IP addresses
 message Flow {
-    bytes destination = 1;
-    bytes source = 2;
+    int32 id = 1;
+    int32 kid = 2;
+    bytes destination = 3;
+    bytes source = 4;
 }
