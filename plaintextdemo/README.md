@@ -29,6 +29,10 @@ Set and install dependencies
 Execution
 ---------
 
-Execute the demo
+Execute the provider
 
-    go run .
+    go run ./provider
+
+Execute the consumer
+
+    go run ./consumer
