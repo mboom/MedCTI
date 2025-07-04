@@ -12,7 +12,7 @@ func main() {
 	fmt.Println(TapTraffic())
 }
 
-func TapTraffic() blockchain.Flow {
-	flow := blockchain.Flow{Id: uuid.New().ID(), Kid: uuid.New().ID(), Destination: [1]byte{2}, Source: [1]byte{1} }
-	return flow
+func TapTraffic() *blockchain.Flow {
+	flow := blockchain.Flow{Id: uuid.New().ID(), Kid: uuid.New().ID(), Destination: []byte{2}, Source: []byte{1} }
+	return &flow
 }
