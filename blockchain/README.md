@@ -27,4 +27,12 @@ Add GOPATH to your PATH variable to make the protocol compiler ```protoc``` loca
 
 Compile the Blockchain service:
 
-    protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative blockchain.proto
+    protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative proto/blockchain.proto
+
+Set and install dependencies
+
+    go mod tidy
+
+Execute the server
+
+    go run server/blockchain_server.go

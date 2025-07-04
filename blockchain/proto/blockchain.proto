@@ -1,11 +1,11 @@
 // Defines an RPC service to simulate a Blockchain implementation
 
 syntax = "proto3";
-package blockchain;
+package proto;
 
 import "google/protobuf/empty.proto";
 
-option go_package = "github.com/mboom/MedCTI/blockchain";
+option go_package = "github.com/mboom/MedCTI/blockchain/proto";
 
 // The Blockchain service definition
 service Blockchain {
