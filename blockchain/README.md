@@ -19,6 +19,10 @@ rm $setupfile
 sudo apt-get install protobuf-compiler
 go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+
+# Clone repository
+git clone git@github.com:mboom/MedCTI.git
+cd MedCTI/blockchain
 ```
 
 Add GOPATH to your PATH variable to make the protocol compiler ```protoc``` locatable:

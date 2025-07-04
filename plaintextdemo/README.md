@@ -19,11 +19,16 @@ rm $setupfile
 
 # Clone repository
 git clone git@github.com:mboom/MedCTI.git
+cd MedCTI/plaintextdemo
 ```
+
+Set and install dependencies
+
+    go mod tidy
 
 Execution
 ---------
-```
-cd MedCTI/DemoPlainText/MedCTI
-go run .
-```
+
+Execute the demo
+
+    go run .
