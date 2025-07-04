@@ -39,4 +39,4 @@ Set and install dependencies
 
 Execute the server
 
-    go run server/blockchain_server.go
+    go run ./server
