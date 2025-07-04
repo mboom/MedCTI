@@ -21,8 +21,8 @@ service Blockchain {
 // Destination and source are 4-bit addresses for simplicity
 // Destination and source represent different kind of network addresses like MAC or IP addresses
 message Flow {
-    int32 id = 1;
-    int32 kid = 2;
+    uint32 id = 1;
+    uint32 kid = 2;
     bytes destination = 3;
     bytes source = 4;
 }

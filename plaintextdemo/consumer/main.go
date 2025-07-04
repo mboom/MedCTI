@@ -13,6 +13,6 @@ func main() {
 }
 
 func TapTraffic() blockchain.Flow {
-	flow := blockchain.Flow{id: uuid.New(), kid: uuid.New(), destination: [1]byte{2}, source: [1]byte{1} }
+	flow := blockchain.Flow{Id: uuid.New().ID(), Kid: uuid.New().ID(), Destination: [1]byte{2}, Source: [1]byte{1} }
 	return flow
 }
