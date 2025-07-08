@@ -10,16 +10,17 @@ import (
 	"net"
 	"os"
 	"sync"
-	"google.golang.org/grpc"
-	"google.golang.org/protobuf/proto"
+
 	"github.com/golang/protobuf/ptypes/empty"
 	pb "github.com/mboom/MedCTI/blockchain/proto"
+	"google.golang.org/grpc"
+	"google.golang.org/protobuf/proto"
 )
 
 var (
 	ledger string
-	host = flag.String("host", "localhost", "The hostname or IP address that will be used to listen.")
-	port = flag.Int("port", 50051, "The server port")
+	host   = flag.String("host", "localhost", "The hostname or IP address that will be used to listen.")
+	port   = flag.Int("port", 50051, "The server port")
 )
 
 type blockchainServer struct {
@@ -81,7 +82,7 @@ func (bs *blockchainServer) FetchLogData(_ *empty.Empty, stream pb.Blockchain_Fe
 		sizebuffer := make([]byte, 4)
 		_, err = f.Read(sizebuffer)
 		if err != nil {
-			panic(err)
+			break
 		}
 
 		// convert the size from byte array to uint32
@@ -106,6 +107,7 @@ func (bs *blockchainServer) FetchLogData(_ *empty.Empty, stream pb.Blockchain_Fe
 			panic(err)
 		}
 	}
+
 	return nil
 }
 
