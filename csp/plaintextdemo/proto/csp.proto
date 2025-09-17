@@ -1,0 +1,29 @@
+// Defines an RPC service to simulate a cryptographic services provider
+
+syntax = "proto3";
+package proto;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "github.com/mboom/MedCTI/csp/plaintextdemo/proto";
+
+// The CSP service definitions
+service CSP {
+
+    // A RPC to publish a garbled function, encryption parameter and key id to the CSP
+    rpc PublishGC(GarbledCircuit) returns (google.protobuf.Empty) {}
+
+    // A RPC to fetch a garbled function and encryption parameter
+    rpc FetchGC(Key) returns (GarbledCircuit) {}
+
+}
+
+message Key {
+    uint32 kid = 1;
+}
+
+message GarbledCircuit {
+    uint32 kid = 1;
+    bytes F = 2;
+    uint32 e = 3;
+}

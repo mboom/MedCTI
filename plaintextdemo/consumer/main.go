@@ -6,21 +6,24 @@ import (
 	"fmt"
 	"math/rand/v2"
 	"time"
+
 	"github.com/google/uuid"
+	blockchain "github.com/mboom/MedCTI/blockchain/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	blockchain "github.com/mboom/MedCTI/blockchain/proto"
 )
 
 var (
-	host = flag.String("host", "localhost", "The hostname or IP address that will be used to listen.")
-	port = flag.Int("port", 50051, "The server port")
+	bc_host      = flag.String("host", "localhost", "The hostname or IP address that will be used to connect to a blockchain simulator.")
+	bc_port      = flag.Int("port", 50051, "The TCP port number of the blockchain simulator.")
+	csp_host     = flag.String("host", "localhost", "The hostname or IP address that will be used to connect to a cryptographic service porvider.")
+	csp_port     = flag.Int("port", 50052, "The TCP port number of the CSP.")
 	localAddress = flag.Int("localAddress", 0, "The 4-byte host address in the simulated network environment")
 )
 
 // create connection to the blockchain simulator
 func connect() (*grpc.ClientConn, blockchain.BlockchainClient) {
-	conn, err := grpc.NewClient(fmt.Sprintf("%v:%d", *host, *port), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(fmt.Sprintf("%v:%d", *bc_host, *bc_port), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		panic(err)
 	}
@@ -29,16 +32,17 @@ func connect() (*grpc.ClientConn, blockchain.BlockchainClient) {
 }
 
 // publish a flow
-func publishFlow(ctx context.Context, ledger blockchain.BlockchainClient, flow *blockchain.Flow) {
+func publishFlow(ctx context.Context, ledger blockchain.BlockchainClient, flow *blockchain.Flow) error {
 	_, err := ledger.PublishLogData(ctx, flow)
 	if err != nil {
-		panic(err)
+		return err
 	}
+
+	return nil
 }
 
-
 // generate randomly a network flow
-func generateFlow(kid uint32) (*blockchain.Flow) {
+func generateFlow(kid uint32) *blockchain.Flow {
 	// choose a random remote address and make sure it is really a remote address
 	remote := rand.IntN(16)
 	for remote == *localAddress {
@@ -69,7 +73,7 @@ func main() {
 	defer conn.Close()
 
 	// create context
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
 	// prepare kid
@@ -78,7 +82,7 @@ func main() {
 	// generate traffic
 	for {
 		// wait a while
-		time.Sleep(time.Duration(rand.IntN(1)) * time.Second)
+		time.Sleep(time.Duration(rand.IntN(3)) * time.Second)
 
 		// new kid after every 1000 flows
 		if counter >= 1000 {
@@ -90,6 +94,10 @@ func main() {
 		flow := generateFlow(kid)
 
 		// publish a the flow to the ledger
-		publishFlow(ctx, ledger, flow)
+		err := publishFlow(ctx, ledger, flow)
+
+		if err != nil {
+			break
+		}
 	}
 }

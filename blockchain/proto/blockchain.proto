@@ -10,14 +10,14 @@ option go_package = "github.com/mboom/MedCTI/blockchain/proto";
 // The Blockchain service definition
 service Blockchain {
 
-    // An RPC that simulates publishing data to a Blockchain
+    // A RPC that simulates publishing data to a Blockchain
     rpc PublishLogData(Flow) returns (google.protobuf.Empty) {}
 
-    // An RPC that simulates reading data from a Blockchain
+    // A RPC that simulates reading data from a Blockchain
     rpc FetchLogData(google.protobuf.Empty) returns (stream Flow) {}
 }
 
-// An basic IPFIX flow definition
+// A basic IPFIX flow definition
 // Destination and source are 4-bit addresses for simplicity
 // Destination and source represent different kind of network addresses like MAC or IP addresses
 message Flow {
