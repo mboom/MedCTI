@@ -100,7 +100,7 @@ func (bs *cspServer) FetchGC(_ context.Context, key *pb.Key) (*pb.GarbledCircuit
 			panic(err)
 		}
 
-		if key.kid == circuit.kid {
+		if key.Kid == circuit.Kid {
 			return circuit, nil
 		}
 
@@ -122,6 +122,6 @@ func main() {
 
 	// create and start blockchain RPC server
 	gRPCServer := grpc.NewServer()
-	pb.RegisterCSPerver(gRPCServer, &cspServer{})
+	pb.RegisterCSPServer(gRPCServer, &cspServer{})
 	gRPCServer.Serve(lis)
 }

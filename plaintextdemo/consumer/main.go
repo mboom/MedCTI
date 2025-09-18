@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	blockchain "github.com/mboom/MedCTI/blockchain/proto"
+	csp "github.com/mboom/MedCTI/csp/plaintextdemo"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -78,6 +79,10 @@ func main() {
 
 	// prepare kid
 	counter, kid := 0, uuid.New().ID()
+
+	// publish Garbled Circuit
+	gc := &csp.GarbledCircuit{Kid: kid, F: 0, rand.IntN(32)}
+	csp.PublishGC(gc)
 
 	// generate traffic
 	for {
