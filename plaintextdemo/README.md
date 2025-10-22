@@ -29,10 +29,14 @@ Set and install dependencies
 Execution
 ---------
 
-Execute the provider
+Execute the cryptographic service provider
 
-    go run ./provider
+    go run ./csp
 
 Execute the consumer
 
     go run ./consumer
+
+Execute the provider
+
+    go run ./provider

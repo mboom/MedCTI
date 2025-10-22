@@ -13,3 +13,22 @@ Implementations
 ---------------
 
 * plaintextdemo: This folder contains an implementation that shows what components exists and how they cooperate with each other. All messages are visible in plain text. Cryptographic functions are simulated, but not implemented.
+
+Quick start
+-----------
+
+1. Open a terminal in the /blockchain folder and start the blockchain simulation server:
+
+    go run ./server
+
+2. Open a second terminal in /plaintextdemo and start the cryptographic service provider:
+
+    go run ./csp
+
+3. Open a third terminal in /plaintextdemo and start the consumer:
+
+    go run ./consumer
+
+4. Open a fourth terminal in /plaintextdemo and start the provider:
+
+    go run ./provider
