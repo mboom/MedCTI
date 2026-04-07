@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	blockchain "github.com/mboom/MedCTI/blockchain/proto"
 	csp "github.com/mboom/MedCTI/csp/plaintextdemo/proto"
+	"github.com/mboom/MedCTI/threatintel"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -21,6 +22,8 @@ var (
 	bc_port      = flag.Int("bcPort", 50051, "The TCP port number of the blockchain simulator.")
 	csp_host     = flag.String("cspHost", "localhost", "The hostname or IP address that will be used to connect to a cryptographic service porvider.")
 	csp_port     = flag.Int("cspPort", 50052, "The TCP port number of the CSP.")
+	ti_host      = flag.String("tiHost", "localhost", "The hostname or IP address that will be used to share threat intel.")
+	ti_port      = flag.Int("tiPort", 50053, "The port that will be used to share threat intel.")
 	localAddress = flag.Int("localAddress", 0, "The 4-byte host address in the simulated network environment.")
 	netflows     = flag.String("netflows", "../data/fs1000-LITNET-2020.csv", "The dataset that contains recorded netflows.")
 	kidLog       = flag.String("kidLog", "../data/kid-consumer.csv", "The log file that will contain the key identifiers used to publish data.")
@@ -44,6 +47,16 @@ func connectCsp() (*grpc.ClientConn, csp.CSPClient) {
 	}
 	csp := csp.NewCSPClient(conn)
 	return conn, csp
+}
+
+// create connection to the threat hunter / threat intelligence provider
+func connectTi() (*grpc.ClientConn, threatintel.ThreatIntelClient) {
+	conn, err := grpc.NewClient(fmt.Sprintf("%v:%d", *ti_host, *ti_port), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		panic(err)
+	}
+	ti := threatintel.NewThreatIntelClient(conn)
+	return conn, ti
 }
 
 // publish a flow
@@ -136,6 +149,10 @@ func main() {
 	// create csp connection
 	conn_csp, cs_provider := connectCsp()
 	defer conn_csp.Close()
+
+	// create ti connection
+	conn_ti, cs_provider := connectTi()
+	defer conn_ti.Close()
 
 	// create context
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)

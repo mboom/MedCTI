@@ -5,25 +5,39 @@ import (
 	"encoding/csv"
 	"flag"
 	"fmt"
+	"net"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	blockchain "github.com/mboom/MedCTI/blockchain/proto"
+	"github.com/mboom/MedCTI/threatintel"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
 var (
-	host  = flag.String("host", "localhost", "The hostname or IP address that will be used to listen.")
-	port  = flag.Int("port", 50051, "The server port")
-	intel = flag.String("intel", "../data/threats-fs1000-LITNET-2020.csv", "File with collected threat intelligence.")
-	match = flag.String("match", "../data/matches.csv", "File to write found threats.")
+	bc_host = flag.String("bcHost", "localhost", "The hostname or IP address that will be used to listen.")
+	bc_port = flag.Int("bcPort", 50051, "The server port")
+	ti_host = flag.String("tiHost", "localhost", "The hostname or IP address that will be used to share threat intel.")
+	ti_port = flag.Int("tiPort", 50053, "The port that will be used to share threat intel.")
+	intel   = flag.String("intel", "../data/threats-fs1000-LITNET-2020.csv", "File with collected threat intelligence.")
+	match   = flag.String("match", "../data/matches.csv", "File to write found threats.")
 )
 
+type threatintelServer struct {
+	threatintel.UnimplementedThreatIntelServer
+	mu sync.Mutex
+}
+
+func (ti *threatintelServer) RequestThreatIntel(_ context.Context, keyId *threatintelServer.KeyId) *threatintelServer.Indicators {
+
+}
+
 // create connection to the blockchain simulator
-func connect() (*grpc.ClientConn, blockchain.BlockchainClient) {
-	conn, err := grpc.NewClient(fmt.Sprintf("%v:%d", *host, *port), grpc.WithTransportCredentials(insecure.NewCredentials()))
+func connectLedger() (*grpc.ClientConn, blockchain.BlockchainClient) {
+	conn, err := grpc.NewClient(fmt.Sprintf("%v:%d", *bc_host, *bc_port), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		panic(err)
 	}
@@ -113,8 +127,8 @@ func main() {
 	flag.Parse()
 
 	// create connection
-	conn, ledger := connect()
-	defer conn.Close()
+	conn_ledger, ledger := connectLedger()
+	defer conn_ledger.Close()
 
 	// create context
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -122,4 +136,15 @@ func main() {
 
 	// read blockchain
 	read(ctx, ledger)
+
+	// prepare listener socket for the RPC server
+	lis, err := net.Listen("tcp", fmt.Sprintf("%v:%d", *ti_host, *ti_port))
+	if err != nil {
+		panic(err)
+	}
+
+	// create and start Threat Intel RPC server
+	gRPCServer := grpc.NewServer()
+	threatintel.RegisterThreatIntelServer(gRPCServer, &threatintelServer{})
+	gRPCServer.Serve(lis)
 }
