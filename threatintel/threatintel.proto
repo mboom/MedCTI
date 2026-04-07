@@ -1,0 +1,21 @@
+// Defines an RPC service to simulate a Blockchain implementation
+
+syntax = "proto3";
+package threatintel;
+
+option go_package = "github.com/mboom/MedCTI/threatintel";
+
+// The ThreatIntel service definition
+service ThreatIntel {
+
+    // A RPC that simulates reading data from a Blockchain
+    rpc RequestThreatIntel(KeyId) returns (Indicators) {}
+}
+
+message KeyId {
+    uint32 id = 1;
+}
+
+message Indicators {
+    bytes addresses = 1;
+}
