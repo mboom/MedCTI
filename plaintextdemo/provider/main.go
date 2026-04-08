@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"flag"
 	"fmt"
+
 	"net"
 	"os"
 	"sync"
@@ -31,8 +32,8 @@ type threatintelServer struct {
 	mu sync.Mutex
 }
 
-func (ti *threatintelServer) RequestThreatIntel(_ context.Context, keyId *threatintelServer.KeyId) *threatintelServer.Indicators {
-
+func (ti *threatintelServer) RequestThreatIntel(_ context.Context, keyId *threatintel.KeyId) *threatintel.Indicators {
+	return nil
 }
 
 // create connection to the blockchain simulator
@@ -138,7 +139,7 @@ func main() {
 	read(ctx, ledger)
 
 	// prepare listener socket for the RPC server
-	lis, err := net.Listen("tcp", fmt.Sprintf("%v:%d", *ti_host, *ti_port))
+	_, err := net.Listen("tcp", fmt.Sprintf("%v:%d", *ti_host, *ti_port))
 	if err != nil {
 		panic(err)
 	}

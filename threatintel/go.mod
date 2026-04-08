@@ -1,4 +1,4 @@
-module github.com/mboom/MedCTI/blockchain
+module github.com/mboom/MedCTI/threatintel
 
 go 1.24.3
 
