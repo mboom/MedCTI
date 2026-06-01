@@ -4,14 +4,14 @@ Install dependencies:
 
 ```bash
 # Install Go
-setupfile="go1.24.3.linux-amd64.tar.gz"
+setupfile="go1.26.3.linux-amd64.tar.gz"
 wget "https://go.dev/dl/$setupfile"
 
-sudo rm -r /usr/local/lib/go
-sudo tar -C /usr/local/lib -xzf $setupfile
+sudo rm -r /usr/local/go
+sudo tar -C /usr/local -xzf $setupfile
 
-sudo ln -s /usr/local/lib/go/bin/go /usr/local/bin/go
-sudo ln -s /usr/local/lib/go/bin/gofmt /usr/local/bin/gofmt
+sudo ln -s /usr/local/go/bin/go /usr/local/bin/go
+sudo ln -s /usr/local/go/bin/gofmt /usr/local/bin/gofmt
 
 rm $setupfile
 

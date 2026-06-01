@@ -1,6 +1,6 @@
 module github.com/mboom/MedCTI/threatintel
 
-go 1.24.3
+go 1.26.3
 
 require (
 	google.golang.org/grpc v1.80.0

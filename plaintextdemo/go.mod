@@ -1,6 +1,6 @@
 module github.com/mboom/MedCTI/plaintextdemo
 
-go 1.24.3
+go 1.26.3
 
 require (
 	github.com/golang/protobuf v1.5.4
