@@ -189,7 +189,7 @@ func requestThreatIntel(ctx context.Context, ti_provider threatintel.ThreatIntel
 		fmt.Printf("Requesting cti for kid %d\n", kid)
 		indicators, _ := ti_provider.RequestThreatIntel(ctx, &threatintel.KeyId{Id: kid})
 		fmt.Printf("received %d indicators\n", len(indicators.Addresses))
-		for ioc := range indicators.Addresses {
+		for _, ioc := range indicators.Addresses {
 			fmt.Printf("%d - %d\n", kid, ioc)
 		}
 	}

@@ -30,7 +30,7 @@ var (
 type threatintelServer struct {
 	threatintel.UnimplementedThreatIntelServer
 	mu      sync.Mutex
-	threats chan *blockchain.Flow
+	threats chan *threatintel.Flow
 }
 
 func (ti *threatintelServer) RequestThreatIntel(_ context.Context, keyId *threatintel.KeyId) (*threatintel.Indicators, error) {
@@ -40,8 +40,7 @@ func (ti *threatintelServer) RequestThreatIntel(_ context.Context, keyId *threat
 	for threat := range ti.threats {
 		if threat.Kid == keyId.Id {
 			fmt.Printf("Matched threat %d, with kid %d and key %d.\n", threat.Id, threat.Kid, keyId.Id)
-			indicators = append(indicators, threat.Destination...)
-			indicators = append(indicators, threat.Source...)
+			indicators = append(indicators, threat.Iocs.Addresses...)
 		} else if count == 20 {
 			break
 		} else {
@@ -113,7 +112,7 @@ func logMatch(flow *blockchain.Flow) {
 	}
 }
 
-func read(ctx context.Context, ledger blockchain.BlockchainClient, threats chan<- *blockchain.Flow) {
+func read(ctx context.Context, ledger blockchain.BlockchainClient, threats chan<- *threatintel.Flow) {
 	var ledger_err error = nil
 	for ledger_err == nil {
 		// create blockchain stream reader
@@ -133,12 +132,19 @@ func read(ctx context.Context, ledger blockchain.BlockchainClient, threats chan<
 
 			dest := cti(fmt.Sprintf("%d", flow.Destination[0]))
 			src := cti(fmt.Sprintf("%d", flow.Source[0]))
+			iocs := []byte{}
 
-			if dest || src {
+			if dest {
 				// logMatch(flow)
-				threats <- flow
-				fmt.Printf("found threat. s: %d, d: %d\n", flow.Source[0], flow.Destination[0])
+				iocs = append(iocs, flow.Destination[0])
 			}
+
+			if src {
+				iocs = append(iocs, flow.Source[0])
+			}
+
+			threats <- &threatintel.Flow{Id: flow.Id, Kid: flow.Kid, Destination: flow.Destination, Source: flow.Source, Iocs: &threatintel.Indicators{Addresses: iocs}}
+			fmt.Printf("found threat. s: %d, d: %d, i: %d\n", flow.Source[0], flow.Destination[0], iocs)
 
 			// print data
 			// fmt.Println(flow)
@@ -159,7 +165,7 @@ func main() {
 	defer cancel()
 
 	// create Threats channel
-	threats := make(chan *blockchain.Flow, math.MaxInt16)
+	threats := make(chan *threatintel.Flow, math.MaxInt16)
 
 	// read blockchain
 	go read(ctx, ledger, threats)
