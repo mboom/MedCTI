@@ -111,6 +111,85 @@ func (x *Indicators) GetAddresses() []byte {
 	return nil
 }
 
+// A basic IPFIX flow definition extended with a list of iocs
+// Destination and source are 4-bit addresses for simplicity
+// Destination and source represent different kind of network addresses like MAC or IP addresses
+type Flow struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            uint32                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Kid           uint32                 `protobuf:"varint,2,opt,name=kid,proto3" json:"kid,omitempty"`
+	Destination   []byte                 `protobuf:"bytes,3,opt,name=destination,proto3" json:"destination,omitempty"`
+	Source        []byte                 `protobuf:"bytes,4,opt,name=source,proto3" json:"source,omitempty"`
+	Iocs          *Indicators            `protobuf:"bytes,5,opt,name=iocs,proto3" json:"iocs,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Flow) Reset() {
+	*x = Flow{}
+	mi := &file_threatintel_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Flow) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Flow) ProtoMessage() {}
+
+func (x *Flow) ProtoReflect() protoreflect.Message {
+	mi := &file_threatintel_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Flow.ProtoReflect.Descriptor instead.
+func (*Flow) Descriptor() ([]byte, []int) {
+	return file_threatintel_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *Flow) GetId() uint32 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *Flow) GetKid() uint32 {
+	if x != nil {
+		return x.Kid
+	}
+	return 0
+}
+
+func (x *Flow) GetDestination() []byte {
+	if x != nil {
+		return x.Destination
+	}
+	return nil
+}
+
+func (x *Flow) GetSource() []byte {
+	if x != nil {
+		return x.Source
+	}
+	return nil
+}
+
+func (x *Flow) GetIocs() *Indicators {
+	if x != nil {
+		return x.Iocs
+	}
+	return nil
+}
+
 var File_threatintel_proto protoreflect.FileDescriptor
 
 const file_threatintel_proto_rawDesc = "" +
@@ -120,7 +199,13 @@ const file_threatintel_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\rR\x02id\"*\n" +
 	"\n" +
 	"Indicators\x12\x1c\n" +
-	"\taddresses\x18\x01 \x01(\fR\taddresses2R\n" +
+	"\taddresses\x18\x01 \x01(\fR\taddresses\"\x8f\x01\n" +
+	"\x04Flow\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\rR\x02id\x12\x10\n" +
+	"\x03kid\x18\x02 \x01(\rR\x03kid\x12 \n" +
+	"\vdestination\x18\x03 \x01(\fR\vdestination\x12\x16\n" +
+	"\x06source\x18\x04 \x01(\fR\x06source\x12+\n" +
+	"\x04iocs\x18\x05 \x01(\v2\x17.threatintel.IndicatorsR\x04iocs2R\n" +
 	"\vThreatIntel\x12C\n" +
 	"\x12RequestThreatIntel\x12\x12.threatintel.KeyId\x1a\x17.threatintel.Indicators\"\x00B%Z#github.com/mboom/MedCTI/threatintelb\x06proto3"
 
@@ -136,19 +221,21 @@ func file_threatintel_proto_rawDescGZIP() []byte {
 	return file_threatintel_proto_rawDescData
 }
 
-var file_threatintel_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_threatintel_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_threatintel_proto_goTypes = []any{
 	(*KeyId)(nil),      // 0: threatintel.KeyId
 	(*Indicators)(nil), // 1: threatintel.Indicators
+	(*Flow)(nil),       // 2: threatintel.Flow
 }
 var file_threatintel_proto_depIdxs = []int32{
-	0, // 0: threatintel.ThreatIntel.RequestThreatIntel:input_type -> threatintel.KeyId
-	1, // 1: threatintel.ThreatIntel.RequestThreatIntel:output_type -> threatintel.Indicators
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	1, // 0: threatintel.Flow.iocs:type_name -> threatintel.Indicators
+	0, // 1: threatintel.ThreatIntel.RequestThreatIntel:input_type -> threatintel.KeyId
+	1, // 2: threatintel.ThreatIntel.RequestThreatIntel:output_type -> threatintel.Indicators
+	2, // [2:3] is the sub-list for method output_type
+	1, // [1:2] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_threatintel_proto_init() }
@@ -162,7 +249,7 @@ func file_threatintel_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_threatintel_proto_rawDesc), len(file_threatintel_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

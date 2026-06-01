@@ -19,3 +19,14 @@ message KeyId {
 message Indicators {
     bytes addresses = 1;
 }
+
+// A basic IPFIX flow definition extended with a list of iocs
+// Destination and source are 4-bit addresses for simplicity
+// Destination and source represent different kind of network addresses like MAC or IP addresses
+message Flow {
+    uint32 id = 1;
+    uint32 kid = 2;
+    bytes destination = 3;
+    bytes source = 4;
+    Indicators iocs = 5;
+}

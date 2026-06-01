@@ -5,7 +5,7 @@ import (
 	"encoding/csv"
 	"flag"
 	"fmt"
-
+	"math"
 	"net"
 	"os"
 	"sync"
@@ -29,11 +29,27 @@ var (
 
 type threatintelServer struct {
 	threatintel.UnimplementedThreatIntelServer
-	mu sync.Mutex
+	mu      sync.Mutex
+	threats chan *blockchain.Flow
 }
 
-func (ti *threatintelServer) RequestThreatIntel(_ context.Context, keyId *threatintel.KeyId) *threatintel.Indicators {
-	return nil
+func (ti *threatintelServer) RequestThreatIntel(_ context.Context, keyId *threatintel.KeyId) (*threatintel.Indicators, error) {
+	indicators := []byte{}
+	count := 0
+	fmt.Printf("Looking for threats for kid %d.\n", keyId.Id)
+	for threat := range ti.threats {
+		if threat.Kid == keyId.Id {
+			fmt.Printf("Matched threat %d, with kid %d and key %d.\n", threat.Id, threat.Kid, keyId.Id)
+			indicators = append(indicators, threat.Destination...)
+			indicators = append(indicators, threat.Source...)
+		} else if count == 20 {
+			break
+		} else {
+			count++
+		}
+	}
+	fmt.Printf("Sending %d threats\n", len(indicators))
+	return &threatintel.Indicators{Addresses: indicators}, nil
 }
 
 // create connection to the blockchain simulator
@@ -72,7 +88,7 @@ func cti(ioc string) bool {
 	return false
 }
 
-func logMatch(flow blockchain.Flow) {
+func logMatch(flow *blockchain.Flow) {
 	file, err := os.OpenFile(*match, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 		panic(err)
@@ -97,29 +113,36 @@ func logMatch(flow blockchain.Flow) {
 	}
 }
 
-func read(ctx context.Context, ledger blockchain.BlockchainClient) {
-	// create blockchain stream reader
-	data, err := ledger.FetchLogData(ctx, &empty.Empty{})
-	if err != nil {
-		panic(err)
-	}
-
-	// receive data from blockchain
-	for err == nil {
-		flow, err := data.Recv()
-		if err != nil {
-			break
+func read(ctx context.Context, ledger blockchain.BlockchainClient, threats chan<- *blockchain.Flow) {
+	var ledger_err error = nil
+	for ledger_err == nil {
+		// create blockchain stream reader
+		data, ledger_err := ledger.FetchLogData(ctx, &empty.Empty{})
+		if ledger_err != nil {
+			panic(ledger_err)
 		}
 
-		dest := cti(fmt.Sprintf("%d", flow.Destination))
-		src := cti(fmt.Sprintf("%d", flow.Source))
+		// receive data from blockchain
+		var err error = nil
+		for err == nil {
+			flow, err := data.Recv()
+			if err != nil {
+				break
+			}
+			// fmt.Printf("received flow %d\n", flow.Id)
 
-		if dest || src {
-			logMatch(*flow)
+			dest := cti(fmt.Sprintf("%d", flow.Destination[0]))
+			src := cti(fmt.Sprintf("%d", flow.Source[0]))
+
+			if dest || src {
+				// logMatch(flow)
+				threats <- flow
+				fmt.Printf("found threat. s: %d, d: %d\n", flow.Source[0], flow.Destination[0])
+			}
+
+			// print data
+			// fmt.Println(flow)
 		}
-
-		// print data
-		// fmt.Println(flow)
 	}
 }
 
@@ -132,20 +155,23 @@ func main() {
 	defer conn_ledger.Close()
 
 	// create context
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Hour)
 	defer cancel()
 
+	// create Threats channel
+	threats := make(chan *blockchain.Flow, math.MaxInt16)
+
 	// read blockchain
-	read(ctx, ledger)
+	go read(ctx, ledger, threats)
 
 	// prepare listener socket for the RPC server
-	_, err := net.Listen("tcp", fmt.Sprintf("%v:%d", *ti_host, *ti_port))
+	lis, err := net.Listen("tcp", fmt.Sprintf("%v:%d", *ti_host, *ti_port))
 	if err != nil {
 		panic(err)
 	}
 
 	// create and start Threat Intel RPC server
 	gRPCServer := grpc.NewServer()
-	threatintel.RegisterThreatIntelServer(gRPCServer, &threatintelServer{})
+	threatintel.RegisterThreatIntelServer(gRPCServer, &threatintelServer{threats: threats})
 	gRPCServer.Serve(lis)
 }

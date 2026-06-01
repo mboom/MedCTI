@@ -5,8 +5,10 @@ import (
 	"encoding/csv"
 	"flag"
 	"fmt"
+	"math"
 	"math/rand/v2"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -138,6 +140,61 @@ func logKid(kid uint32) {
 	}
 }
 
+func generateTraffic(ctx context.Context, cs_provider csp.CSPClient, ledger blockchain.BlockchainClient, trafficKeys chan<- uint32) {
+	// prepare kid
+	counter, kid := 0, uuid.New().ID()
+
+	// publish Garbled Circuit
+	gc := &csp.GarbledCircuit{Kid: kid, F: []byte{0}, E: rand.Uint32()}
+	cs_provider.PublishGC(ctx, gc)
+
+	// load traffic
+	flows := loadFlow()
+	fmt.Printf("generating traffic with %d flows\n", len(flows))
+
+	// generate traffic
+	for _, flowrecord := range flows {
+		// wait a while
+		time.Sleep(time.Duration(rand.IntN(3)) * time.Second)
+
+		// new kid after every 1000 flows
+		if counter >= 100 {
+			fmt.Printf("Renewing kid %d\n", kid)
+			logKid(kid)
+			trafficKeys <- kid
+			kid = uuid.New().ID()
+			counter = 0
+		}
+		counter++
+
+		// create a random flow
+		// flow := generateFlow(kid)
+		dst, _ := strconv.ParseInt(flowrecord[8], 10, 8)
+		src, _ := strconv.ParseInt(flowrecord[7], 10, 8)
+		flow := &blockchain.Flow{Id: uuid.New().ID(), Kid: kid, Destination: []byte{byte(dst)}, Source: []byte{byte(src)}}
+
+		// publish a the flow to the ledger
+		err := publishFlow(ctx, ledger, flow)
+		// fmt.Printf("Published flow %d to ledger.\n", flow.Id)
+
+		if err != nil {
+			break
+		}
+	}
+}
+
+func requestThreatIntel(ctx context.Context, ti_provider threatintel.ThreatIntelClient, trafficKeys <-chan uint32) {
+	for {
+		kid := <-trafficKeys
+		fmt.Printf("Requesting cti for kid %d\n", kid)
+		indicators, _ := ti_provider.RequestThreatIntel(ctx, &threatintel.KeyId{Id: kid})
+		fmt.Printf("received %d indicators\n", len(indicators.Addresses))
+		for ioc := range indicators.Addresses {
+			fmt.Printf("%d - %d\n", kid, ioc)
+		}
+	}
+}
+
 func main() {
 	// parse command line arguments
 	flag.Parse()
@@ -151,45 +208,20 @@ func main() {
 	defer conn_csp.Close()
 
 	// create ti connection
-	conn_ti, cs_provider := connectTi()
+	conn_ti, ti_provider := connectTi()
 	defer conn_ti.Close()
 
 	// create context
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Hour)
 	defer cancel()
 
-	// prepare kid
-	counter, kid := 0, uuid.New().ID()
-	logKid(kid)
+	// create channel for network traffic encryption keys
+	trafficKeys := make(chan uint32, math.MaxInt16)
 
-	// publish Garbled Circuit
-	gc := &csp.GarbledCircuit{Kid: kid, F: []byte{0}, E: rand.Uint32()}
-	cs_provider.PublishGC(ctx, gc)
+	// generateTraffic
+	go generateTraffic(ctx, cs_provider, ledger, trafficKeys)
+	go requestThreatIntel(ctx, ti_provider, trafficKeys)
 
-	// load traffic
-	flows := loadFlow()
-
-	// generate traffic
-	for _, flowrecord := range flows {
-		// wait a while
-		time.Sleep(time.Duration(rand.IntN(3)) * time.Second)
-
-		// new kid after every 1000 flows
-		if counter >= 1000 {
-			kid = uuid.New().ID()
-			logKid(kid)
-		}
-		counter++
-
-		// create a random flow
-		// flow := generateFlow(kid)
-		flow := &blockchain.Flow{Id: uuid.New().ID(), Kid: kid, Destination: []byte(flowrecord[8]), Source: []byte(flowrecord[7])}
-
-		// publish a the flow to the ledger
-		err := publishFlow(ctx, ledger, flow)
-
-		if err != nil {
-			break
-		}
+	for {
 	}
 }

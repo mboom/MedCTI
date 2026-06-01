@@ -4,17 +4,15 @@ package main
 
 import (
 	"context"
-	"encoding/binary"
 	"flag"
 	"fmt"
+	"math"
 	"net"
-	"os"
 	"sync"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	pb "github.com/mboom/MedCTI/blockchain/proto"
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/proto"
 )
 
 var (
@@ -25,20 +23,25 @@ var (
 
 type blockchainServer struct {
 	pb.UnimplementedBlockchainServer
-	mu sync.Mutex
+	mu    sync.Mutex
+	flows chan *pb.Flow
 }
 
 func (bs *blockchainServer) PublishLogData(_ context.Context, flow *pb.Flow) (*empty.Empty, error) {
-	// prevent opening the file multiple times
-	bs.mu.Lock()
+	fmt.Printf("Received publish request.\n")
+	// prevent simultaneous access to ledger.
+	// bs.mu.Lock()
+	// defer bs.mu.Unlock()
 
-	// open the file that contains the simulated ledger
+	// add flow to flow collection
+	bs.flows <- flow
+
+	/*// open the file that contains the simulated ledger
 	f, err := os.OpenFile(ledger, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		panic(err)
 	}
 	defer f.Close()
-	defer bs.mu.Unlock()
 
 	// convert a flow message to a message byte stream
 	data, err := proto.Marshal(flow)
@@ -59,22 +62,29 @@ func (bs *blockchainServer) PublishLogData(_ context.Context, flow *pb.Flow) (*e
 	// write the data to the ledger file
 	if _, err = f.Write(data); err != nil {
 		panic(err)
-	}
+	}*/
 
 	return &empty.Empty{}, nil
 }
 
 func (bs *blockchainServer) FetchLogData(_ *empty.Empty, stream pb.Blockchain_FetchLogDataServer) error {
-	// prevent opening the file multiple times
-	bs.mu.Lock()
+	fmt.Printf("Received fetch request.\n")
+	// prevent simultaneous access to ledger.
+	// bs.mu.Lock()
+	// defer bs.mu.Unlock()
 
-	// open the file that contains the simulated ledger
+	for flow := range bs.flows {
+		if err := stream.Send(flow); err != nil {
+			panic(err)
+		}
+	}
+
+	/*// open the file that contains the simulated ledger
 	f, err := os.OpenFile(ledger, os.O_RDONLY|os.O_CREATE, 0600)
 	if err != nil {
 		panic(err)
 	}
 	defer f.Close()
-	defer bs.mu.Unlock()
 
 	// read the ledger file until the end of the file
 	for err == nil {
@@ -106,7 +116,7 @@ func (bs *blockchainServer) FetchLogData(_ *empty.Empty, stream pb.Blockchain_Fe
 		if err := stream.Send(flow); err != nil {
 			panic(err)
 		}
-	}
+	}*/
 
 	return nil
 }
@@ -122,8 +132,10 @@ func main() {
 		panic(err)
 	}
 
+	flows := make(chan *pb.Flow, math.MaxInt16)
+
 	// create and start blockchain RPC server
 	gRPCServer := grpc.NewServer()
-	pb.RegisterBlockchainServer(gRPCServer, &blockchainServer{})
+	pb.RegisterBlockchainServer(gRPCServer, &blockchainServer{flows: flows})
 	gRPCServer.Serve(lis)
 }
